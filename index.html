@@ -25,8 +25,9 @@
 <div class="calc-card">
     <h2>Wealth Forecast Tool</h2>
     
-    <label>Investment: ₹<span id="amtVal">50</span> Lakhs</label>
-    <input type="range" id="investment" min="10" max="500" value="50" oninput="document.getElementById('amtVal').innerText=this.value">
+    <label>Investment: ₹<span id="amtValDisplay">50 Lakhs</span></label>
+    <input type="range" id="investment" min="10" max="1000" step="5" value="50" oninput="updateSliderLabel(this.value)">
+
 
     <label>Horizon: <span id="yearVal">10</span> Years</label>
     <input type="range" id="years" min="3" max="20" value="10" oninput="document.getElementById('yearVal').innerText=this.value">
@@ -52,22 +53,35 @@
 </div>
 
 <script>
-// 1. THIS LINE MUST BE AT THE TOP OF THE SCRIPT
+// 1. Connection URL
 const scriptURL = 'https://script.google.com/macros/s/AKfycbyQSi241tzM_CRIqyVxefFONUWGL8UlpTIHZX7OylhEAhhzYkeZuRLwTEKCZ7qP9MqV/exec';
 
+// 2. Slider Label Logic
+function updateSliderLabel(val) {
+    let num = parseInt(val);
+    let display;
+    if (num >= 100) {
+        display = (num / 100).toFixed(1) + " Crore";
+    } else {
+        display = num + " Lakhs";
+    }
+    document.getElementById('amtValDisplay').innerText = display;
+}
+
+// 3. Lead Submission Logic
 function submitLead() {
     const name = document.getElementById('name').value;
     const email = document.getElementById('email').value;
     const budget = document.getElementById('investment').value;
     const years = document.getElementById('years').value;
 
-    // Check if fields are empty
+    // Validation
     if(!name || !email.includes('@')) {
         alert("Please enter a valid Name and Email.");
         return;
     }
 
-    // 2. SEND DATA TO GOOGLE (Using the scriptURL defined above)
+    // Send Data to Google Sheets
     fetch(scriptURL, { 
         method: 'POST', 
         mode: 'no-cors', 
@@ -76,7 +90,7 @@ function submitLead() {
     .then(() => console.log("Data sent to Google Sheet"))
     .catch(error => console.error('Error!', error.message));
 
-    // 3. FORMATTER FUNCTION
+    // Number Formatter
     function formatValue(val) {
         let lakhs = val / 100000;
         if (lakhs >= 100) {
@@ -86,23 +100,25 @@ function submitLead() {
         }
     }
 
-    // 4. CALCULATION
+    // ROI Math
     const p = budget * 100000;
     const y = years;
     const finalAsset = p * Math.pow(1.15, y); 
     const totalYield = (p * 0.03) * y; 
     const totalWealth = finalAsset + totalYield;
 
-    // 5. UPDATE UI
+    // Update Display
     document.getElementById('resAsset').innerText = "₹" + formatValue(finalAsset);
     document.getElementById('resYield').innerText = "₹" + formatValue(totalYield);
     document.getElementById('resNet').innerText = "₹" + formatValue(totalWealth);
 
-    // 6. REVEAL RESULTS
+    // Reveal Results
     document.getElementById('blurLayer').classList.remove('blur-active');
     document.getElementById('leadForm').classList.add('hidden');
     document.getElementById('callBtn').classList.remove('hidden');
 }
+</script>
+
 </script>
 </body>
 </html>
