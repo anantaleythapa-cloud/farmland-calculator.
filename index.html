@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmland ROI Calculator</title>
+    <style>
+        :root { --primary: #2d5a27; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .calc-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 450px; min-height: 500px; height: auto; }
+        h2 { color: var(--primary); text-align: center; margin-bottom: 20px; }
+        label { font-weight: 600; color: #444; font-size: 14px; display: block; margin-top: 15px; }
+        input[type="range"] { width: 100%; accent-color: var(--primary); }
+        input[type="text"], input[type="email"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-top: 5px; box-sizing: border-box;}
+        .results-box { position: relative; margin-top: 25px; border-radius: 12px; overflow: hidden; background: #e8f5e9; padding: 20px; min-height: 250px; }
+        .blur-active { filter: blur(6px); pointer-events: none; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255,255,255,0.9); z-index: 99; text-align: center; padding: 10px; box-sizing: border-box;}
+        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; text-decoration: none; display: block; text-align: center;}
+        .call-btn { background: #25d366; margin-top: 15px; }
+        .hidden { display: none; }
+        .row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="calc-card">
+    <h2>Wealth Forecast Tool</h2>
+    
+    <label>Investment: ₹<span id="amtVal">50</span> Lakhs</label>
+    <input type="range" id="investment" min="10" max="500" value="50" oninput="document.getElementById('amtVal').innerText=this.value">
+
+    <label>Horizon: <span id="yearVal">10</span> Years</label>
+    <input type="range" id="years" min="3" max="20" value="10" oninput="document.getElementById('yearVal').innerText=this.value">
+
+    <div class="results-box">
+        <div id="blurLayer" class="blur-active">
+            <div class="row"><span>Final Value:</span> <strong id="resAsset">₹0</strong></div>
+            <div class="row"><span>Agri Yield:</span> <strong id="resYield">₹0</strong></div>
+            <hr>
+            <div class="row" style="color:var(--primary)"><span>Total Wealth:</span> <strong id="resNet">₹0</strong></div>
+        </div>
+
+        <div id="leadForm" class="overlay">
+            <p><strong>Unlock Your 10-Year ROI Report</strong></p>
+            <input type="text" id="name" placeholder="Full Name">
+            <input type="email" id="email" placeholder="Email Address">
+            <button class="btn" onclick="submitLead()">View Results & Get Brochure</button>
+        </div>
+    </div>
+
+    <!-- REPLACE +91XXXXXXXXXX with your phone number -->
+    <a id="callBtn" href="tel:+91XXXXXXXXXX" class="btn call-btn hidden">📞 Call for Site Visit</a>
+</div>
+
+<script>
+// 1. THIS LINE MUST BE AT THE TOP OF THE SCRIPT
+const scriptURL = 'https://script.google.com';
+
+function submitLead() {
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const budget = document.getElementById('investment').value;
+    const years = document.getElementById('years').value;
+
+    // Check if fields are empty
+    if(!name || !email.includes('@')) {
+        alert("Please enter a valid Name and Email.");
+        return;
+    }
+
+    // 2. SEND DATA TO GOOGLE (Using the scriptURL defined above)
+    fetch(scriptURL, { 
+        method: 'POST', 
+        mode: 'no-cors', 
+        body: JSON.stringify({ name: name, email: email, budget: budget, years: years }) 
+    })
+    .then(() => console.log("Data sent to Google Sheet"))
+    .catch(error => console.error('Error!', error.message));
+
+    // 3. FORMATTER FUNCTION
+    function formatValue(val) {
+        let lakhs = val / 100000;
+        if (lakhs >= 100) {
+            return (lakhs / 100).toFixed(2) + " Cr"; 
+        } else {
+            return lakhs.toFixed(1) + " L";
+        }
+    }
+
+    // 4. CALCULATION
+    const p = budget * 100000;
+    const y = years;
+    const finalAsset = p * Math.pow(1.15, y); 
+    const totalYield = (p * 0.03) * y; 
+    const totalWealth = finalAsset + totalYield;
+
+    // 5. UPDATE UI
+    document.getElementById('resAsset').innerText = "₹" + formatValue(finalAsset);
+    document.getElementById('resYield').innerText = "₹" + formatValue(totalYield);
+    document.getElementById('resNet').innerText = "₹" + formatValue(totalWealth);
+
+    // 6. REVEAL RESULTS
+    document.getElementById('blurLayer').classList.remove('blur-active');
+    document.getElementById('leadForm').classList.add('hidden');
+    document.getElementById('callBtn').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
